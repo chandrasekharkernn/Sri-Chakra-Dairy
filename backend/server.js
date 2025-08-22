@@ -26,7 +26,10 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
     'https://sri-chakra-dairy.vercel.app',
-    'https://sri-chakra-dairy.vercel.app/'
+    'https://sri-chakra-dairy.vercel.app/',
+    'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app',
+    'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app/',
+    /^https:\/\/sri-chakra-dairy.*\.vercel\.app$/
   ],
   credentials: true
 }));
