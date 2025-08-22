@@ -22,19 +22,50 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
+// Dynamic CORS configuration for Vercel deployments
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'https://sri-chakra-dairy.vercel.app',
+  'https://sri-chakra-dairy.vercel.app/',
+  'https://sri-chakra-dairy-frontend.vercel.app',
+  'https://sri-chakra-dairy-frontend.vercel.app/',
+  /^https:\/\/sri-chakra-dairy.*\.vercel\.app$/,
+  'https://sri-chakra-dairy.onrender.com'
+];
+
+// Add environment-specific frontend URL if provided
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+console.log('🔧 CORS allowed origins:', allowedOrigins);
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'https://sri-chakra-dairy.vercel.app',
-    'https://sri-chakra-dairy.vercel.app/',
-    'https://sri-chakra-dairy-frontend.vercel.app',
-    'https://sri-chakra-dairy-frontend.vercel.app/',
-    'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app',
-    'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app/',
-    /^https:\/\/sri-chakra-dairy.*\.vercel\.app$/,
-    'https://sri-chakra-dairy.onrender.com'
-  ],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list or matches regex pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      console.log('✅ CORS: Allowed origin:', origin);
+      callback(null, true);
+    } else {
+      console.log('❌ CORS: Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

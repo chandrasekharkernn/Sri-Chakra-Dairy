@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
-// Use Supabase database URL with correct password
-const databaseUrl = 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
+// Use environment variable for database URL, fallback to hardcoded URL for development
+const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
 
 // Debug: Log the DATABASE_URL being used
 console.log('🔧 Using DATABASE_URL:', databaseUrl);

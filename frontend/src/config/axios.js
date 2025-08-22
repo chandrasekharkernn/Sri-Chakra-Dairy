@@ -1,8 +1,10 @@
 import axios from 'axios'
 
-// Set base URL for API calls
-const API_URL = 'https://sri-chakra-dairy-backend-jwmt38r86.vercel.app'
+// Set base URL for API calls - Update this with your actual backend URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://sri-chakra-dairy-backend-jwmt38r86.vercel.app'
 axios.defaults.baseURL = API_URL
+
+console.log('🔧 Frontend connecting to API:', API_URL)
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use(

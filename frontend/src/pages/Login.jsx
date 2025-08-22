@@ -23,6 +23,8 @@ const Login = () => {
     try {
       console.log('🔧 API URL:', import.meta.env.VITE_API_URL)
       console.log('🔧 Axios baseURL:', axios.defaults.baseURL)
+      console.log('🔧 Attempting to send OTP to:', mobileNumber)
+      
       const response = await axios.post('/api/auth/generate-otp', {
         mobileNumber
       })
@@ -36,12 +38,17 @@ const Login = () => {
       }
     } catch (error) {
       console.error('OTP Error:', error)
+      console.error('Error details:', error.response?.data)
+      console.error('Error status:', error.response?.status)
+      console.error('Error message:', error.message)
+      
       if (error.response?.data?.tempOtp) {
         setGeneratedOtp(error.response.data.tempOtp)
         setShowOtpInput(true)
         toast.success('OTP sent! (Check console for development)')
       } else {
-        toast.error('Failed to send OTP. Please try again.')
+        const errorMessage = error.response?.data?.error || error.message || 'Failed to send OTP. Please try again.'
+        toast.error(errorMessage)
       }
     } finally {
       setLoading(false)
