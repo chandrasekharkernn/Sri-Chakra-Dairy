@@ -21,7 +21,7 @@ const Login = () => {
 
     setLoading(true)
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/generate-otp', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/generate-otp`, {
         mobileNumber
       })
       
@@ -54,7 +54,7 @@ const Login = () => {
 
     setLoading(true)
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         mobileNumber,
         otp
       })

@@ -31,7 +31,7 @@ const Profile = () => {
         return
       }
 
-      const response = await axios.get('http://localhost:5000/api/profile/me', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -97,7 +97,7 @@ const Profile = () => {
         return
       }
 
-      const response = await axios.put('http://localhost:5000/api/profile/me', editData, {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/profile/me`, editData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
