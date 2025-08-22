@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sri Chakra Diary - Full Stack Application
 
 A complete full-stack application built with modern technologies for managing personal diary entries.
@@ -92,3 +93,6 @@ VITE_API_URL=http://localhost:5000/api
 ## 📄 License
 
 MIT License
+=======
+# sri-chakra-demo
+>>>>>>> 9ec0146d5943fc1f7ee391536ffbe532478ffd05
