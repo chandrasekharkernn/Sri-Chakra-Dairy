@@ -39,6 +39,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Sri Chakra Diary Backend API',
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    database: db.connected ? 'Connected' : 'Disconnected',
+    version: '1.0.0'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
