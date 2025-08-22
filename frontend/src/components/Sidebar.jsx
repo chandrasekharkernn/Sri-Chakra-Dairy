@@ -30,7 +30,7 @@ const Sidebar = () => {
       ]
 
   return (
-    <div className={`bg-gray-800 h-screen fixed left-0 top-16 shadow-lg transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-16'}`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div className={`bg-gray-800 h-screen fixed left-0 top-0 shadow-lg transition-all duration-300 ease-in-out z-20 ${isExpanded ? 'w-64' : 'w-16'}`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <nav className="mt-6">
         <ul className="space-y-1">
           {menuItems.map((item) => {

@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Download, Calendar, FileSpreadsheet, FileText, Eye, Printer } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { dataApi } from '../lib/api'
 import { toast } from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 
 const DailyReports = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
@@ -13,6 +14,13 @@ const DailyReports = () => {
   const [previewRows, setPreviewRows] = useState([])
   const [reportData, setReportData] = useState(null)
   const todayISO = new Date().toISOString().split('T')[0]
+
+  // Load report data when component mounts
+  useEffect(() => {
+    if (selectedDate) {
+      handleDateChange(selectedDate)
+    }
+  }, []) // Empty dependency array means this runs once on mount
 
   // CSV cell escaper to safely handle commas, quotes, and newlines
   const csvEscape = (value) => {
@@ -46,52 +54,88 @@ const DailyReports = () => {
   }
 
   const handleViewReport = async () => {
+    if (!reportData) {
+      toast.error('Please select a date first')
+      return
+    }
+    
+    setIsPreviewOpen(true)
+    toast.success('Excel preview opened!')
+    
+    // Auto scroll to preview after a short delay
+    setTimeout(() => {
+      const previewModal = document.querySelector('.preview-modal')
+      if (previewModal) {
+        previewModal.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      
+      // Auto scroll to table content
+      setTimeout(() => {
+        const tableContainer = document.getElementById('preview-table-container')
+        if (tableContainer) {
+          tableContainer.scrollTop = 0
+        }
+      }, 200)
+    }, 100)
+  }
+
+  // Auto-load report when date changes
+  const handleDateChange = async (newDate) => {
+    setSelectedDate(newDate)
+    if (newDate) {
     setIsLoading(true)
     try {
-      const response = await dataApi.getDailyReport(selectedDate)
-      
-      if (response.data.success) {
-        const data = response.data.data
-        setReportData(data)
+        const response = await dataApi.getDailyReport(newDate)
         
-        // Generate Excel-like data structure for preview
-        const excelData = generateExcelData(data, selectedDate)
-        setPreviewRows(excelData)
-        setIsPreviewOpen(true)
-        toast.success('Daily report loaded successfully!')
-        
-        // Auto scroll to preview after a short delay
-        setTimeout(() => {
-          const previewModal = document.querySelector('.preview-modal')
-          if (previewModal) {
-            previewModal.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
+                if (response.data.success) {
+          const data = response.data.data
+          console.log('Available data keys:', Object.keys(data))
+          console.log('Full data:', data)
+          setReportData(data)
           
-          // Auto scroll to table content
-          setTimeout(() => {
-            const tableContainer = document.getElementById('preview-table-container')
-            if (tableContainer) {
-              tableContainer.scrollTop = 0
-            }
-          }, 200)
-        }, 100)
+          // Generate Excel-like data structure for preview
+          const excelData = generateExcelData(data, newDate)
+        setPreviewRows(excelData)
       } else {
         toast.error('Failed to fetch report data')
       }
     } catch (error) {
-      console.error('Error loading report:', error)
-      toast.error('Failed to load report. Please try again.')
+        console.error('Error loading report:', error)
+        toast.error('Failed to load report. Please try again.')
     } finally {
       setIsLoading(false)
+      }
     }
   }
 
   const handleDownloadReport = async () => {
     if (!reportData) {
-      toast.error('Please load the report first')
+      toast.error('Please select a date first')
       return
     }
     
+    // Show Excel preview first
+    setIsPreviewOpen(true)
+    toast.success('Excel preview opened!')
+    
+    // Auto scroll to preview after a short delay
+    setTimeout(() => {
+      const previewModal = document.querySelector('.preview-modal')
+      if (previewModal) {
+        previewModal.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      
+      // Auto scroll to table content
+      setTimeout(() => {
+        const tableContainer = document.getElementById('preview-table-container')
+        if (tableContainer) {
+          tableContainer.scrollTop = 0
+        }
+      }, 200)
+    }, 100)
+  }
+
+  const handleConfirmDownload = async () => {
     try {
     const csvContent = previewRows.map(row => row.map(csvEscape).join(',')).join('\n')
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -266,7 +310,7 @@ const DailyReports = () => {
       return totals
     }
 
-    const rows = []
+      const rows = []
     
     // Title rows
     rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
@@ -275,100 +319,129 @@ const DailyReports = () => {
     rows.push(['', '', '', '', '', '', '', dateText, '', '', '', '', '', '', '', ''])
     rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
     
-    // Opening Stock Section
-    rows.push(['OPENING STOCK', '', '', '', '', '', '', '', 'OPENING STOCK', '', '', '', '', '', '', ''])
+    // Header row with column names
+    rows.push(['Particulars', 'Qty (Ltr)', 'Qty (Kg)', 'Avg Fat', 'CLR', 'Avg SNF', 'Kg Fat', 'Kg SNF', 'Particulars', 'Qty (Ltr)', 'Qty (Kg)', 'Avg Fat', 'CLR', 'Avg SNF', 'Kg Fat', 'Kg SNF'])
+    
+    // LEFT SIDE SECTIONS ONLY - Each section shows its own data
+    
+    // EXACT PATTERN MATCHING THE IMAGE - SINGLE PAGE LAYOUT
+    
+    // Helper function to add left side section with data
+    const addLeftSection = (sectionTitle, sectionData) => {
+      rows.push([sectionTitle, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+      if (sectionData && sectionData.length > 0) {
+        sectionData.forEach(item => {
+          rows.push([...mapRow(item), ...Array(8).fill('')])
+        })
+        rows.push([...totalsRow(sectionData), ...Array(8).fill('')])
+      } else {
+        rows.push(['No data available', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+      }
+      rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    }
+    
+    // Helper function to add right side section with data
+    const addRightSection = (sectionTitle, sectionData) => {
+      rows.push(['', '', '', '', '', '', '', '', sectionTitle, '', '', '', '', '', '', ''])
+      if (sectionData && sectionData.length > 0) {
+        sectionData.forEach(item => {
+          rows.push([...Array(8).fill(''), ...mapRow(item)])
+        })
+        rows.push([...Array(8).fill(''), ...totalsRow(sectionData)])
+      } else {
+        rows.push(['', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
+      }
+      rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    }
+    
+    // SIDE BY SIDE LAYOUT - Left and Right sections alternating
+    
+    // Opening Stock (Left) and Sales (Right) - Side by side
+    rows.push(['OPENING STOCK', '', '', '', '', '', '', '', 'SALES', '', '', '', '', '', '', ''])
     if (data.openingStockData && data.openingStockData.length > 0) {
       data.openingStockData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
+        rows.push([...mapRow(item), ...Array(8).fill('')])
       })
-      rows.push([...totalsRow(data.openingStockData), ...totalsRow(data.openingStockData)])
+      rows.push([...totalsRow(data.openingStockData), ...Array(8).fill('')])
     } else {
       rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
     }
     rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
     
-    // Sales Section
-    rows.push(['SALES', '', '', '', '', '', '', '', 'SALES', '', '', '', '', '', '', ''])
-    if (data.salesData && data.salesData.length > 0) {
-      data.salesData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.salesData), ...totalsRow(data.salesData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
     
-    // Other Dairy Sales Section
-    rows.push(['OTHER DAIRY SALES', '', '', '', '', '', '', '', 'OTHER DAIRY SALES', '', '', '', '', '', '', ''])
-    if (data.otherDairySalesData && data.otherDairySalesData.length > 0) {
-      data.otherDairySalesData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.otherDairySalesData), ...totalsRow(data.otherDairySalesData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    
-    // Products Section
-    rows.push(['PRODUCTS', '', '', '', '', '', '', '', 'PRODUCTS', '', '', '', '', '', '', ''])
-    if (data.productsData && data.productsData.length > 0) {
-      data.productsData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.productsData), ...totalsRow(data.productsData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    
-    // Silo Closing Balance Section
-    rows.push(['SILO CLOSING BALANCE', '', '', '', '', '', '', '', 'SILO CLOSING BALANCE', '', '', '', '', '', '', ''])
-    if (data.siloClosingBalanceData && data.siloClosingBalanceData.length > 0) {
-      data.siloClosingBalanceData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.siloClosingBalanceData), ...totalsRow(data.siloClosingBalanceData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    
-    // Products Closing Stock Section
-    rows.push(['PRODUCTS CLOSING STOCK', '', '', '', '', '', '', '', 'PRODUCTS CLOSING STOCK', '', '', '', '', '', '', ''])
-    if (data.productsClosingStockData && data.productsClosingStockData.length > 0) {
-      data.productsClosingStockData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.productsClosingStockData), ...totalsRow(data.productsClosingStockData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    
-    // Waiting Tanker Section
-    rows.push(['WAITING TANKER', '', '', '', '', '', '', '', 'WAITING TANKER', '', '', '', '', '', '', ''])
-    if (data.waitingTankerData && data.waitingTankerData.length > 0) {
-      data.waitingTankerData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
-      })
-      rows.push([...totalsRow(data.waitingTankerData), ...totalsRow(data.waitingTankerData)])
-    } else {
-      rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
-    }
-    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    
-    // Third Party Procurement Section
-    rows.push(['THIRD PARTY PROCUREMENT', '', '', '', '', '', '', '', 'THIRD PARTY PROCUREMENT', '', '', '', '', '', '', ''])
+    // Third Party Procurement (Left) and Silo Closing Balance (Right) - Side by side
+    rows.push(['THIRD PARTY PROCUREMENT', '', '', '', '', '', '', '', 'SILO CLOSING BALANCE', '', '', '', '', '', '', ''])
     if (data.thirdPartyProcurementData && data.thirdPartyProcurementData.length > 0) {
       data.thirdPartyProcurementData.forEach(item => {
-        rows.push([...mapRow(item), ...mapRow(item)])
+        rows.push([...mapRow(item), ...Array(8).fill('')])
       })
-      rows.push([...totalsRow(data.thirdPartyProcurementData), ...totalsRow(data.thirdPartyProcurementData)])
+      rows.push([...totalsRow(data.thirdPartyProcurementData), ...Array(8).fill('')])
     } else {
       rows.push(['No data available', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
     }
+    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    
+    // Products Closing Stock (Right only)
+    rows.push(['', '', '', '', '', '', '', '', 'PRODUCTS CLOSING STOCK', '', '', '', '', '', '', ''])
+    if (data.productsClosingStockData && data.productsClosingStockData.length > 0) {
+      data.productsClosingStockData.forEach(item => {
+        rows.push([...Array(8).fill(''), ...mapRow(item)])
+      })
+      rows.push([...Array(8).fill(''), ...totalsRow(data.productsClosingStockData)])
+    } else {
+      rows.push(['', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
+    }
+    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    
+    // Waiting Tanker (Right only)
+    rows.push(['', '', '', '', '', '', '', '', 'WAITING TANKER', '', '', '', '', '', '', ''])
+    if (data.waitingTankerData && data.waitingTankerData.length > 0) {
+      data.waitingTankerData.forEach(item => {
+        rows.push([...Array(8).fill(''), ...mapRow(item)])
+      })
+      rows.push([...Array(8).fill(''), ...totalsRow(data.waitingTankerData)])
+    } else {
+      rows.push(['', '', '', '', '', '', '', '', 'No data available', '', '', '', '', '', '', ''])
+    }
+    
+    // Add empty row before grand total
+    rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    
+    // Calculate Grand Total
+    const allData = [
+      ...(data.openingStockData || []),
+      ...(data.salesData || []),
+      ...(data.otherDairySalesData || []),
+      ...(data.productsData || []),
+      ...(data.siloClosingBalanceData || []),
+      ...(data.productsClosingStockData || []),
+      ...(data.waitingTankerData || []),
+      ...(data.thirdPartyProcurementData || [])
+    ]
+    
+    const grandTotal = calculateTotals(allData)
+    
+    // Grand Total Section
+    rows.push(['GRAND TOTAL', '', '', '', '', '', '', '', 'GRAND TOTAL', '', '', '', '', '', '', ''])
+    rows.push([
+      'Total',
+      formatNumber(grandTotal.qtyLtr),
+      formatNumber(grandTotal.qtyKg),
+      formatNumber(grandTotal.avgFat),
+      formatNumber(grandTotal.clr),
+      formatNumber(grandTotal.avgSnf),
+      formatNumber(grandTotal.kgFat),
+      formatNumber(grandTotal.kgSnf),
+      'Total',
+      formatNumber(grandTotal.qtyLtr),
+      formatNumber(grandTotal.qtyKg),
+      formatNumber(grandTotal.avgFat),
+      formatNumber(grandTotal.clr),
+      formatNumber(grandTotal.avgSnf),
+      formatNumber(grandTotal.kgFat),
+      formatNumber(grandTotal.kgSnf)
+    ])
     
     return rows
   }
@@ -384,11 +457,11 @@ const DailyReports = () => {
         <Header />
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto pt-24 p-8">
+        <div className="flex-1 overflow-auto pt-24 p-8 ml-16">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Daily Reports</h1>
-            <p className="text-gray-600">Generate comprehensive daily reports with all data in one view</p>
+            <p className="text-gray-600">Select a date to automatically view and download daily reports with PDF and Excel preview</p>
           </div>
 
           {/* Controls */}
@@ -404,7 +477,7 @@ const DailyReports = () => {
               type="date"
                   id="date"
               value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  onChange={(e) => handleDateChange(e.target.value)}
               max={todayISO}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -413,58 +486,26 @@ const DailyReports = () => {
           {/* Action Buttons */}
               <div className="flex gap-3">
             <button
-                  onClick={handleViewReport}
-              disabled={isLoading}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-md transition-colors duration-200"
-            >
-                  <Eye className="h-4 w-4" />
-                  {isLoading ? 'Loading...' : 'View Report'}
-            </button>
-
-            <button
-              onClick={handlePdfPreview}
+                  onClick={handlePdfPreview}
                   disabled={!reportData || isLoading}
                   className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white px-4 py-2 rounded-md transition-colors duration-200"
                 >
                   <Printer className="h-4 w-4" />
                   PDF Preview
-                </button>
+            </button>
 
-                <button
+            <button
                   onClick={handleDownloadReport}
                   disabled={!reportData || isLoading}
                   className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-md transition-colors duration-200"
                 >
                   <Download className="h-4 w-4" />
-                  Download CSV
+                  Download Excel
             </button>
               </div>
             </div>
 
-            {/* Report Summary */}
-            {reportData && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-900 mb-3">Report Summary - {formatReportDate(selectedDate)}</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-blue-800">Opening Stock:</span>
-                    <span className="ml-2 text-blue-600">{reportData.openingStockData?.length || 0} entries</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-blue-800">Sales:</span>
-                    <span className="ml-2 text-blue-600">{reportData.salesData?.length || 0} entries</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-blue-800">Products:</span>
-                    <span className="ml-2 text-blue-600">{reportData.productsData?.length || 0} entries</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-blue-800">Procurement:</span>
-                    <span className="ml-2 text-blue-600">{reportData.thirdPartyProcurementData?.length || 0} entries</span>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
 
           {/* Report Preview Modal */}
@@ -472,11 +513,11 @@ const DailyReports = () => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 preview-modal">
               <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-7xl max-h-[90vh] overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
-                  <h2 className="text-xl font-semibold text-gray-900">Daily Report Preview - {formatReportDate(selectedDate)}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Excel Preview - {formatReportDate(selectedDate)}</h2>
                   <div className="flex gap-2">
-                    <button onClick={handleDownloadReport} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2">
+                    <button onClick={handleConfirmDownload} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2">
                       <Download className="h-4 w-4" />
-                      Download CSV
+                      Download Excel
                     </button>
                     <button onClick={handlePdfPreview} className="bg-rose-600 text-white px-4 py-2 rounded-md hover:bg-rose-700 flex items-center gap-2">
                       <Printer className="h-4 w-4" />
@@ -503,8 +544,8 @@ const DailyReports = () => {
                           )
                         }
 
-                        const isLeftTitle = row[0] && row.slice(1, 8).every(v => !v)
-                        const isRightTitle = row[8] && row.slice(9, 16).every(v => !v)
+                        const isLeftTitle = row[0] && row[0] !== 'Particulars' && row.slice(1, 8).every(v => !v) && !row[8]
+                        const isRightTitle = row[8] && row[8] !== 'Particulars' && row.slice(9, 16).every(v => !v) && !row[0]
                         const isHeaderRow = row[0] === 'Particulars' && row[8] === 'Particulars'
 
                         if (isHeaderRow) {
@@ -522,30 +563,54 @@ const DailyReports = () => {
 
                         return (
                           <tr key={idx} className="hover:bg-gray-50">
-                            {isLeftTitle ? (
-                              <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[0]}</td>
+                            {isLeftTitle && isRightTitle ? (
+                              <>
+                                <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[0]}</td>
+                                <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[8]}</td>
+                              </>
+                            ) : isLeftTitle ? (
+                              <>
+                                <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[0]}</td>
+                                {row.slice(8, 16).map((cell, cidx) => (
+                                  <td
+                                    key={`r-${cidx}`}
+                                    className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
+                                  >
+                                    {cell}
+                                  </td>
+                                ))}
+                              </>
+                            ) : isRightTitle ? (
+                              <>
+                                {row.slice(0, 8).map((cell, cidx) => (
+                                  <td
+                                    key={`l-${cidx}`}
+                                    className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
+                                  >
+                                    {cell}
+                                  </td>
+                                ))}
+                                <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[8]}</td>
+                              </>
                             ) : (
-                              row.slice(0, 8).map((cell, cidx) => (
+                              <>
+                                {row.slice(0, 8).map((cell, cidx) => (
                                 <td
                                   key={`l-${cidx}`}
-                                  className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
+                                    className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
                                 >
                                   {cell}
                                 </td>
-                              ))
-                            )}
-
-                            {isRightTitle ? (
-                              <td colSpan={8} className="border border-gray-200 px-3 py-2 font-bold bg-blue-100 text-blue-800">{row[8]}</td>
-                            ) : (
-                              row.slice(8, 16).map((cell, cidx) => (
+                                ))}
+                                {row.slice(8, 16).map((cell, cidx) => (
                                 <td
                                   key={`r-${cidx}`}
-                                  className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
+                                    className={`border border-gray-200 px-3 py-2 ${cidx === 0 ? 'text-left font-medium' : 'text-right'}`}
                                 >
                                   {cell}
                                 </td>
-                              ))
+                                ))}
+                              </>
                             )}
                           </tr>
                         )
