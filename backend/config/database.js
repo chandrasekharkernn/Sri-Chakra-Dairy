@@ -1,13 +1,13 @@
 const { Pool } = require('pg');
 
-// Force PostgreSQL configuration for this project
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
+// Use Supabase database URL for production, fallback to local for development
+const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
 
 // Debug: Log the DATABASE_URL being used
-console.log('🔧 Using DATABASE_URL:', process.env.DATABASE_URL);
+console.log('🔧 Using DATABASE_URL:', databaseUrl);
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
