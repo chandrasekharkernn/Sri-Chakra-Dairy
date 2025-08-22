@@ -29,7 +29,8 @@ app.use(cors({
     'https://sri-chakra-dairy.vercel.app/',
     'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app',
     'https://sri-chakra-dairy-5gdpdm5h5-chandra-sekhars-projects-3ceb66d8.vercel.app/',
-    /^https:\/\/sri-chakra-dairy.*\.vercel\.app$/
+    /^https:\/\/sri-chakra-dairy.*\.vercel\.app$/,
+    'https://sri-chakra-dairy.onrender.com'
   ],
   credentials: true
 }));
