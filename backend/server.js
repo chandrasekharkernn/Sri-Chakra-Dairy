@@ -46,8 +46,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // For development/testing - allow all Vercel deployments
-    if (origin && origin.includes('vercel.app')) {
-      console.log('✅ CORS: Allowed Vercel origin:', origin);
+    if (origin && (origin.includes('vercel.app') || origin.includes('onrender.com'))) {
+      console.log('✅ CORS: Allowed deployment origin:', origin);
       callback(null, true);
       return;
     }
