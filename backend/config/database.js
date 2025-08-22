@@ -12,10 +12,16 @@ const pool = new Pool({
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
+  // Force IPv4 for Render.com compatibility
+  host: process.env.NODE_ENV === 'production' ? 'db.yrakjnonabrqyicyvdam.supabase.co' : undefined,
+  port: process.env.NODE_ENV === 'production' ? 5432 : undefined,
+  database: process.env.NODE_ENV === 'production' ? 'postgres' : undefined,
+  user: process.env.NODE_ENV === 'production' ? 'postgres' : undefined,
+  password: process.env.NODE_ENV === 'production' ? 'S3@@@1303' : undefined,
   // Additional connection options for Supabase
   statement_timeout: 30000,
   query_timeout: 30000,
-  application_name: 'sri-chakra-dairy-backend'
+  application_name: 'sri-chakra-diary-backend'
 });
 
 // Test the connection
