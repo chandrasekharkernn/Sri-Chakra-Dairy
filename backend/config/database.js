@@ -1,28 +1,31 @@
 const { Pool } = require('pg');
 
-// Use environment variable for database URL, fallback to direct connection
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
-
-// Debug: Log the DATABASE_URL being used
-console.log('🔧 Using DATABASE_URL:', databaseUrl);
-
-const pool = new Pool({
-  connectionString: databaseUrl,
+// Use individual environment variables for database connection
+const dbConfig = {
+  host: process.env.DB_HOST || 'db.yrakjnonabrqyicyvdam.supabase.co',
+  port: parseInt(process.env.DB_PORT) || 5432,
+  database: process.env.DB_NAME || 'postgres',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'S3@@@1303',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  // Force IPv4 for Render.com compatibility
-  host: process.env.NODE_ENV === 'production' ? 'db.yrakjnonabrqyicyvdam.supabase.co' : undefined,
-  port: process.env.NODE_ENV === 'production' ? 5432 : undefined,
-  database: process.env.NODE_ENV === 'production' ? 'postgres' : undefined,
-  user: process.env.NODE_ENV === 'production' ? 'postgres' : undefined,
-  password: process.env.NODE_ENV === 'production' ? 'S3@@@1303' : undefined,
-  // Additional connection options for Supabase
   statement_timeout: 30000,
   query_timeout: 30000,
   application_name: 'sri-chakra-diary-backend'
+};
+
+// Debug: Log the database configuration
+console.log('🔧 Using database config:', {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  database: dbConfig.database,
+  user: dbConfig.user,
+  ssl: dbConfig.ssl ? 'enabled' : 'disabled'
 });
+
+const pool = new Pool(dbConfig);
 
 // Test the connection
 pool.on('connect', () => {
