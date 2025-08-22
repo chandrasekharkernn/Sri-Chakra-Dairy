@@ -6,7 +6,7 @@ import { Phone, ArrowRight } from 'lucide-react'
 import Logo from '../components/Logo'
 
 const Login = () => {
-  const [mobileNumber, setMobileNumber] = useState('')
+  const [employeeNumber, setEmployeeNumber] = useState('')
   const [otp, setOtp] = useState('')
   const [showOtpInput, setShowOtpInput] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -14,8 +14,8 @@ const Login = () => {
   const navigate = useNavigate()
 
   const handleSendOTP = async () => {
-    if (!mobileNumber || mobileNumber.length < 10) {
-      toast.error('Please enter a valid mobile number')
+    if (!employeeNumber || employeeNumber.length < 5) {
+      toast.error('Please enter a valid employee number')
       return
     }
 
@@ -23,10 +23,10 @@ const Login = () => {
     try {
       console.log('🔧 API URL:', import.meta.env.VITE_API_URL)
       console.log('🔧 Axios baseURL:', axios.defaults.baseURL)
-      console.log('🔧 Attempting to send OTP to:', mobileNumber)
+      console.log('🔧 Attempting to send OTP to:', employeeNumber)
       
       const response = await axios.post('/api/auth/generate-otp', {
-        mobileNumber
+        employeeNumber
       })
       
       if (response.data.success) {
@@ -64,7 +64,7 @@ const Login = () => {
     setLoading(true)
     try {
       const response = await axios.post('/api/auth/verify-otp', {
-        mobileNumber,
+        employeeNumber,
         otp
       })
 
@@ -103,19 +103,19 @@ const Login = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Mobile Number
+                  Employee Number
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Phone className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    type="tel"
-                    value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    placeholder="Enter your mobile number"
+                    type="text"
+                    value={employeeNumber}
+                    onChange={(e) => setEmployeeNumber(e.target.value)}
+                    placeholder="Enter your employee number"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    maxLength={10}
+                    maxLength={20}
                   />
                 </div>
               </div>
@@ -180,7 +180,7 @@ const Login = () => {
                   }}
                   className="w-full text-gray-600 hover:text-gray-800 font-medium py-2 transition-colors duration-200"
                 >
-                  ← Back to mobile number
+                  ← Back to employee number
                 </button>
               </div>
             </div>

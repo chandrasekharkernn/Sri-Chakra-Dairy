@@ -1,20 +1,4 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
-
-// Use Supabase database URL with correct password
-const databaseUrl = 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
-
-// Initialize Sequelize with PostgreSQL
-const sequelize = new Sequelize(databaseUrl, {
-  dialect: 'postgres',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  }
-});
+const sequelize = require('./database'); // Import the centralized sequelize instance
 
 // Import models
 const User = require('./User');

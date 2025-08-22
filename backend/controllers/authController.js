@@ -29,36 +29,31 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_PASS !
 // Generate OTP
 const generateOTP = async (req, res) => {
   try {
-    const { mobileNumber } = req.body
+    const { employeeNumber } = req.body
 
-    if (!mobileNumber) {
-      return res.status(400).json({ error: 'Mobile number is required' })
+    if (!employeeNumber) {
+      return res.status(400).json({ error: 'Employee number is required' })
     }
 
-    // Check if user exists in database by mobile number
+    // Check if user exists in database by employee number
     const user = await db.getRow(
-      'SELECT id, username, email, mobile_number, role, is_active FROM users WHERE mobile_number = $1',
-      [mobileNumber]
+      'SELECT id, username, email, employee_number, role FROM users WHERE employee_number = $1',
+      [employeeNumber]
     )
 
     if (!user) {
       return res.status(404).json({ error: 'User not found. Please contact administrator.' })
     }
 
-    if (!user.is_active) {
-      return res.status(403).json({ error: 'Account is deactivated. Please contact administrator.' })
-    }
-
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     
     // Store OTP with user info and expiration (5 minutes)
-    otpStore.set(mobileNumber, {
+    otpStore.set(employeeNumber, {
       otp,
       userId: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
       expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
     })
 
@@ -66,10 +61,9 @@ const generateOTP = async (req, res) => {
     console.log('\n' + '='.repeat(60))
     console.log('🔐 OTP GENERATED SUCCESSFULLY 🔐')
     console.log('='.repeat(60))
-    console.log('📱 Mobile Number:', mobileNumber)
+    console.log('👤 Employee Number:', employeeNumber)
     console.log('👤 Username:', user.username)
     console.log('📧 Email:', user.email)
-    console.log('🔑 Role:', user.role)
     console.log('🎫 OTP Code:', otp)
     console.log('⏰ Expires in: 5 minutes')
     console.log('📅 Generated at:', new Date().toLocaleString())
@@ -98,7 +92,7 @@ const generateOTP = async (req, res) => {
         res.json({
           success: true,
           message: 'OTP sent successfully to your registered email',
-          mobileNumber: mobileNumber
+          employeeNumber: employeeNumber
         })
       } catch (emailError) {
         console.error('❌ Email error:', emailError.message)
@@ -108,7 +102,7 @@ const generateOTP = async (req, res) => {
           success: true,
           message: 'OTP generated successfully (email service error)',
           tempOtp: otp, // Development only - remove in production
-          mobileNumber: mobileNumber
+          employeeNumber: employeeNumber
         })
       }
     } else {
@@ -118,7 +112,7 @@ const generateOTP = async (req, res) => {
         success: true,
         message: 'OTP generated successfully (email not configured)',
         tempOtp: otp, // Development only - remove in production
-        mobileNumber: mobileNumber
+        employeeNumber: employeeNumber
       })
     }
 
@@ -131,24 +125,24 @@ const generateOTP = async (req, res) => {
 // Verify OTP and login
 const verifyOTP = async (req, res) => {
   try {
-    const { mobileNumber, otp } = req.body
+    const { employeeNumber, otp } = req.body
 
-    if (!mobileNumber || !otp) {
-      return res.status(400).json({ error: 'Mobile number and OTP are required' })
+    if (!employeeNumber || !otp) {
+      return res.status(400).json({ error: 'Employee number and OTP are required' })
     }
 
     // Get stored OTP data
-    const otpData = otpStore.get(mobileNumber)
+    const otpData = otpStore.get(employeeNumber)
 
     if (!otpData) {
-      console.log('❌ OTP not found for mobile:', mobileNumber)
+      console.log('❌ OTP not found for employee:', employeeNumber)
       return res.status(400).json({ error: 'OTP not found. Please generate a new OTP.' })
     }
 
     // Check if OTP is expired
     if (Date.now() > otpData.expiresAt) {
-      console.log('⏰ OTP expired for mobile:', mobileNumber)
-      otpStore.delete(mobileNumber)
+      console.log('⏰ OTP expired for employee:', employeeNumber)
+      otpStore.delete(employeeNumber)
       return res.status(400).json({ error: 'OTP has expired. Please generate a new OTP.' })
     }
 
@@ -157,7 +151,7 @@ const verifyOTP = async (req, res) => {
       console.log('\n' + '❌'.repeat(20))
       console.log('❌ INVALID OTP ATTEMPT ❌')
       console.log('❌'.repeat(20))
-      console.log('📱 Mobile Number:', mobileNumber)
+      console.log('👤 Employee Number:', employeeNumber)
       console.log('👤 Username:', otpData.username)
       console.log('🎫 Expected OTP:', otpData.otp)
       console.log('🎫 Received OTP:', otp)
@@ -168,12 +162,12 @@ const verifyOTP = async (req, res) => {
 
     // Get user from database
     const user = await db.getRow(
-      'SELECT id, username, email, mobile_number, role, is_active FROM users WHERE mobile_number = $1',
-      [mobileNumber]
+      'SELECT id, username, email, employee_number, role FROM users WHERE employee_number = $1',
+      [employeeNumber]
     )
 
-    if (!user || !user.is_active) {
-      return res.status(403).json({ error: 'User not found or account deactivated' })
+    if (!user) {
+      return res.status(403).json({ error: 'User not found' })
     }
 
     // Generate JWT token
@@ -181,23 +175,21 @@ const verifyOTP = async (req, res) => {
       { 
         userId: user.id,
         email: user.email,
-        mobileNumber: user.mobile_number,
-        role: user.role
+        employeeNumber: user.employee_number
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     )
 
     // Clear OTP from store
-    otpStore.delete(mobileNumber)
+    otpStore.delete(employeeNumber)
 
     console.log('\n' + '✅'.repeat(20))
     console.log('✅ LOGIN SUCCESSFUL ✅')
     console.log('✅'.repeat(20))
     console.log('👤 Username:', user.username)
-    console.log('📱 Mobile Number:', mobileNumber)
+    console.log('👤 Employee Number:', employeeNumber)
     console.log('📧 Email:', user.email)
-    console.log('🔑 Role:', user.role)
     console.log('🎫 OTP Verified Successfully')
     console.log('📅 Login Time:', new Date().toLocaleString())
     console.log('✅'.repeat(20))
@@ -211,7 +203,7 @@ const verifyOTP = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        mobile_number: user.mobile_number,
+        employee_number: user.employee_number,
         role: user.role
       },
       token

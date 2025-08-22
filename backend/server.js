@@ -25,6 +25,9 @@ app.use(morgan('combined'));
 // Dynamic CORS configuration for Vercel deployments
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
   'https://sri-chakra-dairy.vercel.app',
   'https://sri-chakra-dairy.vercel.app/',
   'https://sri-chakra-dairy-frontend.vercel.app',

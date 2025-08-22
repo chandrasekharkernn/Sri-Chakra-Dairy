@@ -32,6 +32,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" replace />
   }
 
+  // If allowedRoles is empty, allow all authenticated users
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/login" replace />
   }
@@ -169,11 +170,11 @@ function App() {
             } 
           />
           
-          {/* Employee Routes */}
+          {/* Home Route - accessible to all authenticated users */}
           <Route 
             path="/home" 
             element={
-              <ProtectedRoute allowedRoles={['employee']}>
+              <ProtectedRoute>
                 <Home />
               </ProtectedRoute>
             } 
@@ -181,7 +182,7 @@ function App() {
           <Route 
             path="/reports" 
             element={
-              <ProtectedRoute allowedRoles={['employee']}>
+              <ProtectedRoute>
                 <DailyReports />
               </ProtectedRoute>
             } 
@@ -189,7 +190,7 @@ function App() {
           <Route 
             path="/procurement" 
             element={
-              <ProtectedRoute allowedRoles={['employee']}>
+              <ProtectedRoute>
                 <Procurement />
               </ProtectedRoute>
             } 
@@ -197,7 +198,7 @@ function App() {
           <Route 
             path="/production" 
             element={
-              <ProtectedRoute allowedRoles={['employee']}>
+              <ProtectedRoute>
                 <Production />
               </ProtectedRoute>
             } 

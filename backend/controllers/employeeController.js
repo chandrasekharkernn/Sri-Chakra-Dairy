@@ -44,12 +44,15 @@ const createEmployee = async (req, res) => {
     const dummyPassword = 'dummy-password-for-otp-only'
     const passwordHash = await bcrypt.hash(dummyPassword, 10)
 
+    // Use mobile number as employee number for now
+    const employeeNumber = mobile_number
+
     // Insert new employee
     const result = await db.query(
-      `INSERT INTO users (username, email, mobile_number, password_hash, role, department, is_active, created_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) 
-       RETURNING id, username, email, mobile_number, role, department, is_active`,
-      [username, email, mobile_number, passwordHash, userRole, department, true]
+      `INSERT INTO users (employee_number, username, email, mobile_number, password_hash, role, department, is_active, created_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) 
+       RETURNING id, username, email, mobile_number, role, department, is_active, employee_number`,
+      [employeeNumber, username, email, mobile_number, passwordHash, userRole, department, true]
     )
 
     const newEmployee = result.rows[0]
@@ -59,6 +62,7 @@ const createEmployee = async (req, res) => {
       username: newEmployee.username,
       email: newEmployee.email,
       mobile_number: newEmployee.mobile_number,
+      employee_number: newEmployee.employee_number,
       role: newEmployee.role,
       department: department
     })
@@ -70,6 +74,7 @@ const createEmployee = async (req, res) => {
         username: newEmployee.username,
         email: newEmployee.email,
         mobile_number: newEmployee.mobile_number,
+        employee_number: newEmployee.employee_number,
         role: newEmployee.role,
         department: department
       }
@@ -87,7 +92,7 @@ const getAllEmployees = async (req, res) => {
     console.log('🔍 Fetching employees...')
     
     const result = await db.query(
-      'SELECT id, username, email, mobile_number, role, department, is_active, created_at FROM users WHERE role IN ($1, $2) ORDER BY created_at DESC',
+      'SELECT id, username, email, mobile_number, employee_number, role, department, is_active, created_at FROM users WHERE role IN ($1, $2) ORDER BY created_at DESC',
       ['employee', 'admin']
     )
 

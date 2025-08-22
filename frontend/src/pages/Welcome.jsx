@@ -8,7 +8,7 @@ const Welcome = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   const handleGetStarted = () => {
-    if (user.role === 'super_admin') {
+    if (user.role === 'super_admin' || user.role === 'admin') {
       navigate('/super-admin/dashboard')
     } else {
       navigate('/home')
