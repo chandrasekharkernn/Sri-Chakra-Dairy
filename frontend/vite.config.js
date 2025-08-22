@@ -11,7 +11,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   },
-  base: process.env.NODE_ENV === 'production' ? './' : '/'
+  base: '/'
 })
