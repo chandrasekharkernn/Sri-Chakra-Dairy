@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Set base URL for API calls
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_URL = 'https://sri-chakra-dairy-backend-jwmt38r86.vercel.app'
 axios.defaults.baseURL = API_URL
 
 // Add request interceptor to include auth token

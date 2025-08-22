@@ -21,7 +21,9 @@ const Login = () => {
 
     setLoading(true)
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/generate-otp`, {
+      console.log('🔧 API URL:', import.meta.env.VITE_API_URL)
+      console.log('🔧 Axios baseURL:', axios.defaults.baseURL)
+      const response = await axios.post('/api/auth/generate-otp', {
         mobileNumber
       })
       
@@ -54,7 +56,7 @@ const Login = () => {
 
     setLoading(true)
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
+      const response = await axios.post('/api/auth/verify-otp', {
         mobileNumber,
         otp
       })

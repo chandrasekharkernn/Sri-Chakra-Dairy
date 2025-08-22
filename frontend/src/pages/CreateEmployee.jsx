@@ -54,7 +54,7 @@ const CreateEmployee = () => {
         return
       }
 
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/employees`, {
+      const response = await axios.post('/api/employees', {
         ...formData
       }, {
         headers: {
