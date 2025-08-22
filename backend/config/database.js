@@ -1,9 +1,10 @@
 const { Pool } = require('pg');
 
-// Use environment variable for DATABASE_URL, fallback to localhost for development
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
-}
+// Force PostgreSQL configuration for this project
+process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
+
+// Debug: Log the DATABASE_URL being used
+console.log('🔧 Using DATABASE_URL:', process.env.DATABASE_URL);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
