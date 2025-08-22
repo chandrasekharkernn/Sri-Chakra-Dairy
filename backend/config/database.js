@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
-// Use Supabase database URL for production, fallback to local for development
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
+// Force use Supabase database URL, override any system environment variables
+const databaseUrl = 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
 
 // Debug: Log the DATABASE_URL being used
 console.log('🔧 Using DATABASE_URL:', databaseUrl);

@@ -1,10 +1,11 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Use DATABASE_URL from environment variables
+// Force use Supabase database URL
+const supabaseUrl = 'postgresql://postgres:S3@@@1303@db.yrakjnonabrqyicyvdam.supabase.co:5432/postgres';
 
 // Initialize Sequelize with PostgreSQL
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const sequelize = new Sequelize(supabaseUrl, {
   dialect: 'postgres',
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
   pool: {
