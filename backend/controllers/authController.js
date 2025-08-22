@@ -79,7 +79,7 @@ const generateOTP = async (req, res) => {
 
     // Simple email content like the example
     const mailOptions = {
-      from: 'donotreplythisisotp@gmail.com',
+      from: process.env.EMAIL_USER,
       to: user.email, // Send to user's registered email
       subject: 'Login OTP',
       text: `Your OTP to login is ${otp}. Also Check your mobile.`,

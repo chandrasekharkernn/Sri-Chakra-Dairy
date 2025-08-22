@@ -1,8 +1,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Override any existing DATABASE_URL with our PostgreSQL one
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/sri_chakra_diary';
+// Use DATABASE_URL from environment variables
 
 // Initialize Sequelize with PostgreSQL
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
