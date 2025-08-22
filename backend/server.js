@@ -45,6 +45,13 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
+    // For development/testing - allow all Vercel deployments
+    if (origin && origin.includes('vercel.app')) {
+      console.log('✅ CORS: Allowed Vercel origin:', origin);
+      callback(null, true);
+      return;
+    }
+    
     // Check if origin is in allowed list or matches regex pattern
     const isAllowed = allowedOrigins.some(allowed => {
       if (typeof allowed === 'string') {
